@@ -1,0 +1,169 @@
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { login } from '../../store/slices/authSlice';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+
+const LoginForm = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isLoading, error } = useSelector((state) => state.auth);
+  
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
+  const onSubmit = async (data) => {
+    try {
+      await dispatch(login(data)).unwrap();
+      
+      // Redirect to intended page or home
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
+    } catch (error) {
+      // Error is handled by the slice
+    }
+  };
+
+  return (
+    <div className="w-full">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-black text-earth-900 mb-2">
+          Chào mừng trở lại
+        </h2>
+        <p className="text-earth-600">
+          Đăng nhập để tiếp tục mua sắm
+        </p>
+      </div>
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-4">
+            {/* Email Field */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-earth-700 mb-2">
+                Email
+              </label>
+              <input
+                {...register('email', {
+                  required: 'Email là bắt buộc',
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Email không hợp lệ',
+                  },
+                })}
+                type="email"
+                className="w-full px-4 py-3 border border-earth-300 rounded-xl focus:ring-2 focus:ring-warm-terracotta focus:border-transparent transition-all duration-300 bg-earth-50"
+                placeholder="Nhập email của bạn"
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-warm-rust">{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-earth-700 mb-2">
+                Mật khẩu
+              </label>
+              <div className="relative">
+                <input
+                  {...register('password', {
+                    required: 'Mật khẩu là bắt buộc',
+                    minLength: {
+                      value: 6,
+                      message: 'Mật khẩu phải có ít nhất 6 ký tự',
+                    },
+                  })}
+                  type={showPassword ? 'text' : 'password'}
+                  className="w-full px-4 py-3 pr-12 border border-earth-300 rounded-xl focus:ring-2 focus:ring-warm-terracotta focus:border-transparent transition-all duration-300 bg-earth-50"
+                  placeholder="Nhập mật khẩu"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 text-earth-400" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-earth-400" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-warm-rust">{errors.password.message}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-warm-rust/10 border border-warm-rust/20 rounded-xl p-4">
+              <p className="text-sm text-warm-rust">{error}</p>
+            </div>
+          )}
+
+          {/* Remember Me & Forgot Password */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 text-warm-terracotta focus:ring-warm-terracotta border-earth-300 rounded"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-earth-600">
+                Ghi nhớ đăng nhập
+              </label>
+            </div>
+
+            <div className="text-sm">
+              <Link
+                to="/forgot-password"
+                className="font-medium text-warm-terracotta hover:text-warm-rust transition-colors duration-300"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-warm-terracotta hover:bg-warm-rust focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warm-terracotta transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Đang đăng nhập...
+              </div>
+            ) : (
+              'Đăng nhập'
+            )}
+          </button>
+
+          {/* Sign Up Link */}
+          <div className="text-center">
+            <p className="text-sm text-earth-600">
+              Chưa có tài khoản?{' '}
+              <Link
+                to="/register"
+                className="font-medium text-warm-terracotta hover:text-warm-rust transition-colors duration-300"
+              >
+                Đăng ký ngay
+              </Link>
+            </p>
+          </div>
+        </form>
+    </div>
+  );
+};
+
+export default LoginForm;

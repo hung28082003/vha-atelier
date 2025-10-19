@@ -50,12 +50,14 @@ module.exports = {
         info: '#7a6b5c',           // Dark brown
       },
       
-      // Minimalist Typography
+      // Bold Typography for Impact
       fontFamily: {
         'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         'serif': ['Crimson Text', 'Georgia', 'serif'],
         'mono': ['JetBrains Mono', 'Fira Code', 'monospace'],
         'display': ['Inter', 'sans-serif'],  // Clean, modern display font
+        'heading': ['Inter', 'sans-serif'],  // Bold headings without serif
+        'bold': ['Inter', 'sans-serif'],     // Extra bold for impact
       },
       
       // Custom Font Sizes
