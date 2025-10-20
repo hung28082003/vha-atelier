@@ -48,49 +48,26 @@ const RegisterForm = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
-            {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-earth-700 mb-2">
-                  Tên
-                </label>
-                <input
-                  {...register('firstName', {
-                    required: 'Tên là bắt buộc',
-                    minLength: {
-                      value: 2,
-                      message: 'Tên phải có ít nhất 2 ký tự',
-                    },
-                  })}
-                  type="text"
-                  className="w-full px-4 py-3 border border-earth-300 rounded-xl focus:ring-2 focus:ring-warm-terracotta focus:border-transparent transition-all duration-300 bg-earth-50"
-                  placeholder="Tên"
-                />
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-warm-rust">{errors.firstName.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-earth-700 mb-2">
-                  Họ
-                </label>
-                <input
-                  {...register('lastName', {
-                    required: 'Họ là bắt buộc',
-                    minLength: {
-                      value: 2,
-                      message: 'Họ phải có ít nhất 2 ký tự',
-                    },
-                  })}
-                  type="text"
-                  className="w-full px-4 py-3 border border-earth-300 rounded-xl focus:ring-2 focus:ring-warm-terracotta focus:border-transparent transition-all duration-300 bg-earth-50"
-                  placeholder="Họ"
-                />
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-warm-rust">{errors.lastName.message}</p>
-                )}
-              </div>
+            {/* Name Field */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-earth-700 mb-2">
+                Họ và tên
+              </label>
+              <input
+                {...register('name', {
+                  required: 'Họ và tên là bắt buộc',
+                  minLength: {
+                    value: 2,
+                    message: 'Họ và tên phải có ít nhất 2 ký tự',
+                  },
+                })}
+                type="text"
+                className="w-full px-4 py-3 border border-earth-300 rounded-xl focus:ring-2 focus:ring-warm-terracotta focus:border-transparent transition-all duration-300 bg-earth-50"
+                placeholder="Họ và tên"
+              />
+              {errors.name && (
+                <p className="mt-1 text-sm text-warm-rust">{errors.name.message}</p>
+              )}
             </div>
 
             {/* Email Field */}
@@ -164,10 +141,6 @@ const RegisterForm = () => {
                     minLength: {
                       value: 6,
                       message: 'Mật khẩu phải có ít nhất 6 ký tự',
-                    },
-                    pattern: {
-                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                      message: 'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số',
                     },
                   })}
                   type={showPassword ? 'text' : 'password'}
