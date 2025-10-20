@@ -4,17 +4,11 @@ const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
   // Thông tin cơ bản
-  firstName: {
+  name: {
     type: String,
-    required: [true, 'Vui lòng nhập tên'],
+    required: [true, 'Vui lòng nhập họ và tên'],
     trim: true,
-    maxlength: [50, 'Tên không được quá 50 ký tự']
-  },
-  lastName: {
-    type: String,
-    required: [true, 'Vui lòng nhập họ'],
-    trim: true,
-    maxlength: [50, 'Họ không được quá 50 ký tự']
+    maxlength: [100, 'Họ và tên không được quá 100 ký tự']
   },
   email: {
     type: String,
@@ -47,14 +41,15 @@ const userSchema = new mongoose.Schema({
     default: 'other'
   },
   
+  // Danh sách yêu thích
+  wishlist: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product'
+  }],
+  
   // Địa chỉ
   addresses: [{
-    type: {
-      type: String,
-      enum: ['home', 'work', 'other'],
-      default: 'home'
-    },
-    fullName: {
+    name: {
       type: String,
       required: true
     },
@@ -218,7 +213,7 @@ userSchema.methods.getPublicProfile = function() {
 
 // Virtual fields
 userSchema.virtual('fullName').get(function() {
-  return `${this.firstName} ${this.lastName}`;
+  return this.name;
 });
 
 userSchema.virtual('defaultAddress').get(function() {
