@@ -16,6 +16,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 import UserDashboard from './pages/UserDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import ChatbotWidget from './components/chatbot/ChatbotWidget';
 
 // Main App Component
@@ -123,6 +124,7 @@ function AppContent() {
                   <Route path="/orders" element={<OrdersPage />} />
                   <Route path="/orders/:id" element={<OrderDetailPage />} />
                   <Route path="/profile" element={<UserDashboard />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
                   {/* Add more routes here */}
                 </Routes>
               </main>
