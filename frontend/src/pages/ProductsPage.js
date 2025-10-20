@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useSearchParams } from 'react-router-dom';
-import { fetchProducts, setFilters, clearFilters, fetchCategories } from '../store/slices/productSlice';
+import { useSearchParams } from 'react-router-dom';
+import { fetchProducts, clearFilters, fetchCategories } from '../store/slices/productSlice';
 import ProductCard from '../components/ProductCard';
 
 const ProductsPage = () => {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { products, categories, pagination, isLoading, filters } = useSelector((state) => state.products);
+  const { products, categories, pagination, isLoading } = useSelector((state) => state.products);
   
   const [currentFilters, setCurrentFilters] = useState({
     category: searchParams.get('category') || '',

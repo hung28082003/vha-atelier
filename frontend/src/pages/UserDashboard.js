@@ -504,10 +504,10 @@ const AddressesTab = () => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Địa chỉ giao hàng</h2>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
         >
-          Thêm địa chỉ
+          {showForm ? 'Hủy' : 'Thêm địa chỉ'}
         </button>
       </div>
 

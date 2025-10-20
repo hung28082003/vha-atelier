@@ -23,19 +23,12 @@ const handleValidationErrors = (req, res, next) => {
 
 // Validation rules cho User
 const validateUserRegistration = [
-  body('firstName')
+  body('name')
     .trim()
     .notEmpty()
-    .withMessage('Tên là bắt buộc')
-    .isLength({ max: 50 })
-    .withMessage('Tên không được quá 50 ký tự'),
-  
-  body('lastName')
-    .trim()
-    .notEmpty()
-    .withMessage('Họ là bắt buộc')
-    .isLength({ max: 50 })
-    .withMessage('Họ không được quá 50 ký tự'),
+    .withMessage('Họ và tên là bắt buộc')
+    .isLength({ max: 100 })
+    .withMessage('Họ và tên không được quá 100 ký tự'),
   
   body('email')
     .isEmail()
@@ -44,9 +37,7 @@ const validateUserRegistration = [
   
   body('password')
     .isLength({ min: 6 })
-    .withMessage('Mật khẩu phải có ít nhất 6 ký tự')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số'),
+    .withMessage('Mật khẩu phải có ít nhất 6 ký tự'),
   
   body('phone')
     .optional()
@@ -370,9 +361,7 @@ const validatePasswordResetConfirm = [
   
   body('password')
     .isLength({ min: 6 })
-    .withMessage('Mật khẩu phải có ít nhất 6 ký tự')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số'),
+    .withMessage('Mật khẩu phải có ít nhất 6 ký tự'),
   
   handleValidationErrors
 ];

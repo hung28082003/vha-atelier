@@ -8,7 +8,7 @@ const sendEmail = require('../utils/sendEmail');
 // @route   POST /api/auth/register
 // @access  Public
 const register = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone, gender } = req.body;
+  const { name, email, password, phone, gender } = req.body;
 
   // Check if user already exists
   const existingUser = await User.findByEmail(email);
@@ -18,8 +18,7 @@ const register = asyncHandler(async (req, res) => {
 
   // Create user
   const user = await User.create({
-    firstName,
-    lastName,
+    name,
     email,
     password,
     phone,
@@ -44,7 +43,7 @@ const register = asyncHandler(async (req, res) => {
       email: user.email,
       subject: 'Xác thực email - VHA Atelier',
       message: `
-        Xin chào ${user.firstName},
+        Xin chào ${user.name},
         
         Cảm ơn bạn đã đăng ký tài khoản tại VHA Atelier!
         
@@ -243,7 +242,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
       email: user.email,
       subject: 'Đặt lại mật khẩu - VHA Atelier',
       message: `
-        Xin chào ${user.firstName},
+        Xin chào ${user.name},
         
         Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản VHA Atelier.
         
@@ -375,7 +374,7 @@ const resendVerification = asyncHandler(async (req, res) => {
       email: user.email,
       subject: 'Xác thực email - VHA Atelier',
       message: `
-        Xin chào ${user.firstName},
+        Xin chào ${user.name},
         
         Vui lòng click vào link sau để xác thực email:
         ${verificationUrl}
