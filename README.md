@@ -7,6 +7,7 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
 ## ✨ **Key Features**
 
 ### **Frontend Features**
+
 - 🛍️ **Product Catalog** - Browse and search fashion items
 - 🛒 **Shopping Cart** - Add, update, and manage cart items
 - 💳 **QR Code Payment** - Secure payment with QR code generation
@@ -16,6 +17,7 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
 - 🎨 **Modern UI/UX** - Earth tone minimalist design with advanced animations
 
 ### **Backend Features**
+
 - 🔐 **JWT Authentication** - Secure user authentication and authorization
 - 📊 **MongoDB Database** - Scalable NoSQL database with Mongoose ODM
 - 🖼️ **Image Upload** - Cloudinary integration for product images
@@ -27,6 +29,7 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
 ## 🛠️ **Technology Stack**
 
 ### **Frontend**
+
 - **React.js 18** - Modern React with hooks and functional components
 - **TypeScript** - Type-safe development
 - **Redux Toolkit** - State management
@@ -37,6 +40,7 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
 - **Framer Motion** - Advanced animations and transitions
 
 ### **Backend**
+
 - **Node.js** - JavaScript runtime
 - **Express.js** - Web application framework
 - **MongoDB** - NoSQL database
@@ -49,6 +53,7 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
 - **Ollama/Hugging Face** - AI chatbot integration (FREE)
 
 ### **Development Tools**
+
 - **Nodemon** - Development server with auto-restart
 - **Concurrently** - Run multiple commands simultaneously
 - **ESLint** - Code linting and formatting
@@ -57,6 +62,7 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
 ## 🚀 **Quick Start**
 
 ### **Prerequisites**
+
 - Node.js (v16 or higher)
 - MongoDB (local or Atlas)
 - Git
@@ -64,32 +70,36 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
 ### **Installation**
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/vha-atelier.git
    cd vha-atelier
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Environment Setup**
+
    ```bash
    # Copy environment template
    cp backend/config.env.example backend/config.env
-   
+
    # Edit backend/config.env with your configuration
    ```
 
 4. **Start MongoDB**
+
    ```bash
    # Windows
    net start MongoDB
-   
+
    # macOS
    brew services start mongodb-community
-   
+
    # Linux
    sudo systemctl start mongod
    ```
@@ -100,6 +110,7 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
    ```
 
 ### **Access the Application**
+
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
 - **API Documentation**: http://localhost:5000/api/health
@@ -179,6 +190,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 ## 🎨 **Design System**
 
 ### **Color Palette (Earth Tone)**
+
 - **Primary**: Warm Terracotta (#D2691E)
 - **Secondary**: Earth Brown (#8B4513)
 - **Accent**: Warm Rust (#B7410E)
@@ -186,6 +198,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 - **Background**: Cream (#F5F5DC)
 
 ### **Typography**
+
 - **Headings**: Bold, modern sans-serif
 - **Body**: Clean, readable font
 - **UI Elements**: Consistent sizing and spacing
@@ -193,12 +206,14 @@ CLOUDINARY_API_SECRET=your-api-secret
 ## 📱 **API Endpoints**
 
 ### **Authentication**
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `GET /api/auth/profile` - Get user profile
 - `PUT /api/auth/profile` - Update user profile
 
 ### **Products**
+
 - `GET /api/products` - Get all products
 - `GET /api/products/:id` - Get product by ID
 - `GET /api/products/featured` - Get featured products
@@ -206,21 +221,25 @@ CLOUDINARY_API_SECRET=your-api-secret
 - `GET /api/products/sale` - Get sale products
 
 ### **Categories**
+
 - `GET /api/categories` - Get all categories
 - `GET /api/categories/:id` - Get category by ID
 
 ### **Cart**
+
 - `GET /api/cart` - Get user cart
 - `POST /api/cart` - Add item to cart
 - `PUT /api/cart/:id` - Update cart item
 - `DELETE /api/cart/:id` - Remove cart item
 
 ### **Orders**
+
 - `GET /api/orders/my-orders` - Get user orders
 - `POST /api/orders` - Create new order
 - `GET /api/orders/:id` - Get order by ID
 
 ### **Chatbot**
+
 - `POST /api/chatbot/message` - Send message to chatbot
 - `GET /api/chatbot/conversations` - Get user conversations
 
@@ -240,6 +259,7 @@ npm run test
 ## 🚀 **Deployment**
 
 ### **Frontend (Vercel/Netlify)**
+
 ```bash
 # Build for production
 cd frontend && npm run build
@@ -252,6 +272,7 @@ netlify deploy --prod --dir=build
 ```
 
 ### **Backend (Heroku/Railway)**
+
 ```bash
 # Set environment variables
 heroku config:set MONGODB_URI=your-mongodb-uri
@@ -276,6 +297,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👨‍💻 **Author**
 
 **VHA Atelier Team**
+
 - Email: contact@vha-atelier.com
 - GitHub: [@vha-atelier](https://github.com/vha-atelier)
 
