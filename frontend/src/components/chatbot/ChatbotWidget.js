@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { sendMessage, startConversation, toggleChatbot } from '../../store/slices/chatbotSlice';
-import { isAuthenticated } from '../../store/slices/authSlice';
+// import { isAuthenticated } from '../../store/slices/authSlice';
 
 const ChatbotWidget = () => {
   const dispatch = useDispatch();
-  const { isOpen, messages, isLoading, isSendingMessage } = useSelector((state) => state.chatbot);
+  const { isOpen, messages, isSendingMessage } = useSelector((state) => state.chatbot);
   const { isAuthenticated } = useSelector((state) => state.auth);
   
   const [inputMessage, setInputMessage] = useState('');

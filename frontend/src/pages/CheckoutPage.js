@@ -4,14 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { fetchCart } from '../store/slices/cartSlice';
 import { createOrder, generatePaymentQR } from '../store/slices/orderSlice';
-import toast from 'react-hot-toast';
+// import toast from 'react-hot-toast';
 
 const CheckoutPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, itemCount, totalAmount, isEmpty } = useSelector((state) => state.cart);
+  const { items, totalAmount, isEmpty } = useSelector((state) => state.cart);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const { paymentQR, isProcessingPayment } = useSelector((state) => state.orders);
+  const { paymentQR } = useSelector((state) => state.orders);
   
   const [currentStep, setCurrentStep] = useState(1);
   const [orderCreated, setOrderCreated] = useState(false);
@@ -21,7 +21,7 @@ const CheckoutPage = () => {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
+    // watch,
   } = useForm({
     defaultValues: {
       firstName: user?.firstName || '',

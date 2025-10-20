@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchCart, updateCartItem, removeFromCart, clearCart } from '../store/slices/cartSlice';
-import { isAuthenticated } from '../store/slices/authSlice';
+// import { isAuthenticated } from '../store/slices/authSlice';
 
 const CartPage = () => {
   const dispatch = useDispatch();

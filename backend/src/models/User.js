@@ -148,7 +148,8 @@ const userSchema = new mongoose.Schema({
     default: Date.now
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  suppressReservedKeysWarning: true
 });
 
 // Indexes
