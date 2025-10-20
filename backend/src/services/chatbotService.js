@@ -1,15 +1,11 @@
-const OpenAI = require('openai');
+const AIService = require('./aiService');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const ChatbotConversation = require('../models/ChatbotConversation');
 
-// Initialize OpenAI (only if API key is provided)
-let openai = null;
-if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your-openai-api-key-here') {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-}
+// Initialize AI Service with provider selection
+const aiProvider = process.env.AI_PROVIDER || 'fallback'; // ollama, huggingface, fallback
+const aiService = new AIService(aiProvider);
 
 // System prompt for the fashion assistant
 const SYSTEM_PROMPT = `Bạn là VHA Style Assistant, một trợ lý thời trang thông minh và chuyên nghiệp của VHA Atelier. 
@@ -68,12 +64,14 @@ const getCategoryContext = async (categories) => {
 // Generate AI response
 const generateResponse = async (userMessage, conversation, context = {}) => {
   try {
-    // Check if OpenAI is available
-    if (!openai) {
+    // Use AI Service to generate response
+    const result = await aiService.generateResponse(userMessage, context);
+    
+    if (!result.success) {
       return {
         success: false,
-        error: 'Chatbot tạm thời không khả dụng. Vui lòng thử lại sau.',
-        fallback: true
+        error: result.response,
+        fallback: result.fallback || false
       };
     }
 

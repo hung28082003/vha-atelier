@@ -10,7 +10,7 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
 - 🛍️ **Product Catalog** - Browse and search fashion items
 - 🛒 **Shopping Cart** - Add, update, and manage cart items
 - 💳 **QR Code Payment** - Secure payment with QR code generation
-- 🤖 **AI Chatbot** - Intelligent customer support powered by OpenAI
+- 🤖 **AI Chatbot** - Intelligent customer support powered by Ollama/Hugging Face
 - 👤 **User Authentication** - Login, registration, and profile management
 - 📱 **Responsive Design** - Mobile-first approach with Tailwind CSS
 - 🎨 **Modern UI/UX** - Earth tone minimalist design with advanced animations
@@ -46,7 +46,7 @@ VHA Atelier is a modern e-commerce fashion website built with React.js and Node.
 - **Multer** - File upload handling
 - **Cloudinary** - Image storage and optimization
 - **Nodemailer** - Email service
-- **OpenAI API** - AI chatbot integration
+- **Ollama/Hugging Face** - AI chatbot integration (FREE)
 
 ### **Development Tools**
 - **Nodemon** - Development server with auto-restart
@@ -152,8 +152,16 @@ JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRE=7d
 JWT_REFRESH_SECRET=your-super-secret-refresh-key
 
-# OpenAI Configuration (Optional)
-OPENAI_API_KEY=your-openai-api-key
+# AI Provider Configuration
+AI_PROVIDER=fallback  # fallback, ollama, huggingface
+
+# Ollama Configuration (Local AI - FREE)
+OLLAMA_URL=http://localhost:11434
+OLLAMA_MODEL=llama2
+
+# Hugging Face Configuration (FREE)
+HUGGINGFACE_API_KEY=your-huggingface-api-key
+HUGGINGFACE_MODEL=microsoft/DialoGPT-medium
 
 # Email Configuration (Optional)
 EMAIL_USER=your-email@gmail.com
