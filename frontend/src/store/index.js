@@ -6,6 +6,7 @@ import orderSlice from './slices/orderSlice';
 import chatbotSlice from './slices/chatbotSlice';
 import uiSlice from './slices/uiSlice';
 import userSlice from './slices/userSlice';
+import adminSlice from './slices/adminSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     chatbot: chatbotSlice,
     ui: uiSlice,
     user: userSlice,
+    admin: adminSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

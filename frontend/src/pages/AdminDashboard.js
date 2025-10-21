@@ -9,14 +9,33 @@ import {
   ChatBubbleLeftRightIcon,
   CogIcon,
   BellIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { Link, useNavigate } from 'react-router-dom';
 import { logout } from '../store/slices/authSlice';
+import { 
+  getDashboardStats,
+  getUsers,
+  getProducts,
+  getOrders,
+  getSystemSettings
+} from '../store/slices/adminSlice';
 import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const { user } = useSelector((state) => state.auth);
+  const { 
+    dashboardStats, 
+    users, 
+    products, 
+    orders, 
+    systemSettings,
+    loading 
+  } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -28,6 +47,33 @@ const AdminDashboard = () => {
       toast.error('Bạn không có quyền truy cập trang này');
     }
   }, [user, navigate]);
+
+  // Load data when component mounts
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      dispatch(getDashboardStats());
+      dispatch(getSystemSettings());
+    }
+  }, [dispatch, user]);
+
+  // Load data when tab changes
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      switch (activeTab) {
+        case 'users':
+          dispatch(getUsers({ page: 1, limit: 10 }));
+          break;
+        case 'products':
+          dispatch(getProducts({ page: 1, limit: 10 }));
+          break;
+        case 'orders':
+          dispatch(getOrders({ page: 1, limit: 10 }));
+          break;
+        default:
+          break;
+      }
+    }
+  }, [dispatch, user, activeTab]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -77,19 +123,19 @@ const AdminDashboard = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardTab />;
+        return <DashboardTab dashboardStats={dashboardStats} loading={loading.dashboard} />;
       case 'users':
-        return <UsersTab />;
+        return <UsersTab users={users} loading={loading.users} />;
       case 'products':
-        return <ProductsTab />;
+        return <ProductsTab products={products} loading={loading.products} />;
       case 'orders':
-        return <OrdersTab />;
+        return <OrdersTab orders={orders} loading={loading.orders} />;
       case 'chatbot':
         return <ChatbotTab />;
       case 'settings':
-        return <SettingsTab />;
+        return <SettingsTab systemSettings={systemSettings} loading={loading.settings} />;
       default:
-        return <DashboardTab />;
+        return <DashboardTab dashboardStats={dashboardStats} loading={loading.dashboard} />;
     }
   };
 
@@ -180,60 +226,33 @@ const AdminDashboard = () => {
 };
 
 // Dashboard Tab Component
-const DashboardTab = () => {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalProducts: 0,
-    totalOrders: 0,
-    totalRevenue: 0
-  });
-
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // TODO: Fetch dashboard data from API
-    setTimeout(() => {
-      setStats({
-        totalUsers: 1250,
-        totalProducts: 89,
-        totalOrders: 342,
-        totalRevenue: 12500000
-      });
-      setRecentOrders([
-        { id: 'ORD001', customer: 'Nguyễn Văn A', amount: 1250000, status: 'pending' },
-        { id: 'ORD002', customer: 'Trần Thị B', amount: 850000, status: 'shipped' },
-        { id: 'ORD003', customer: 'Lê Văn C', amount: 2100000, status: 'delivered' }
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+const DashboardTab = ({ dashboardStats, loading }) => {
 
   const statCards = [
     {
       title: 'Tổng người dùng',
-      value: stats.totalUsers.toLocaleString(),
+      value: dashboardStats.totalUsers.toLocaleString(),
       icon: UserGroupIcon,
       color: 'blue',
       change: '+12%'
     },
     {
       title: 'Tổng sản phẩm',
-      value: stats.totalProducts.toLocaleString(),
+      value: dashboardStats.totalProducts.toLocaleString(),
       icon: CubeIcon,
       color: 'green',
       change: '+5%'
     },
     {
       title: 'Tổng đơn hàng',
-      value: stats.totalOrders.toLocaleString(),
+      value: dashboardStats.totalOrders.toLocaleString(),
       icon: ShoppingBagIcon,
       color: 'purple',
       change: '+8%'
     },
     {
       title: 'Doanh thu',
-      value: `${stats.totalRevenue.toLocaleString()}đ`,
+      value: `${dashboardStats.totalRevenue.toLocaleString()}đ`,
       icon: ChartBarIcon,
       color: 'orange',
       change: '+15%'
@@ -299,16 +318,16 @@ const DashboardTab = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {recentOrders.map((order) => (
-                    <tr key={order.id}>
+                  {dashboardStats.recentOrders?.map((order) => (
+                    <tr key={order._id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {order.id}
+                        {order.orderNumber}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {order.customer}
+                        {order.user?.name || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {order.amount.toLocaleString()}đ
+                        {order.totalAmount?.toLocaleString()}đ
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -333,21 +352,7 @@ const DashboardTab = () => {
 };
 
 // Users Tab Component
-const UsersTab = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // TODO: Fetch users from API
-    setTimeout(() => {
-      setUsers([
-        { id: 1, name: 'Nguyễn Văn A', email: 'user1@example.com', role: 'user', status: 'active', createdAt: '2024-01-15' },
-        { id: 2, name: 'Trần Thị B', email: 'user2@example.com', role: 'user', status: 'active', createdAt: '2024-01-14' },
-        { id: 3, name: 'Lê Văn C', email: 'user3@example.com', role: 'user', status: 'inactive', createdAt: '2024-01-13' }
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+const UsersTab = ({ users, loading }) => {
 
   return (
     <div className="p-6">
@@ -393,7 +398,7 @@ const UsersTab = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {users.map((user) => (
-                <tr key={user.id}>
+                <tr key={user._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {user.name}
                   </td>
@@ -405,17 +410,23 @@ const UsersTab = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {user.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
+                      {user.isActive ? 'Hoạt động' : 'Không hoạt động'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(user.createdAt).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">Sửa</button>
-                    <button className="text-red-600 hover:text-red-900">Xóa</button>
+                    <button className="text-blue-600 hover:text-blue-900 mr-3">
+                      <PencilIcon className="h-4 w-4 inline mr-1" />
+                      Sửa
+                    </button>
+                    <button className="text-red-600 hover:text-red-900">
+                      <TrashIcon className="h-4 w-4 inline mr-1" />
+                      Xóa
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -428,27 +439,14 @@ const UsersTab = () => {
 };
 
 // Products Tab Component
-const ProductsTab = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // TODO: Fetch products from API
-    setTimeout(() => {
-      setProducts([
-        { id: 1, name: 'Áo sơ mi nam', price: 500000, stock: 50, category: 'Nam', status: 'active' },
-        { id: 2, name: 'Váy dài nữ', price: 800000, stock: 30, category: 'Nữ', status: 'active' },
-        { id: 3, name: 'Giày thể thao', price: 1200000, stock: 0, category: 'Phụ kiện', status: 'inactive' }
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+const ProductsTab = ({ products, loading }) => {
 
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Quản lý sản phẩm</h2>
-        <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+        <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+          <PlusIcon className="h-4 w-4 mr-2" />
           Thêm sản phẩm
         </button>
       </div>
@@ -488,29 +486,35 @@ const ProductsTab = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {products.map((product) => (
-                <tr key={product.id}>
+                <tr key={product._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {product.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {product.price.toLocaleString()}đ
+                    {product.price?.toLocaleString()}đ
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {product.stock}
+                    {product.stock || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {product.category}
+                    {product.category?.name || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {product.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
+                      {product.isActive ? 'Hoạt động' : 'Không hoạt động'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">Sửa</button>
-                    <button className="text-red-600 hover:text-red-900">Xóa</button>
+                    <button className="text-blue-600 hover:text-blue-900 mr-3">
+                      <PencilIcon className="h-4 w-4 inline mr-1" />
+                      Sửa
+                    </button>
+                    <button className="text-red-600 hover:text-red-900">
+                      <TrashIcon className="h-4 w-4 inline mr-1" />
+                      Xóa
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -523,21 +527,7 @@ const ProductsTab = () => {
 };
 
 // Orders Tab Component
-const OrdersTab = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // TODO: Fetch orders from API
-    setTimeout(() => {
-      setOrders([
-        { id: 'ORD001', customer: 'Nguyễn Văn A', amount: 1250000, status: 'pending', date: '2024-01-15' },
-        { id: 'ORD002', customer: 'Trần Thị B', amount: 850000, status: 'shipped', date: '2024-01-14' },
-        { id: 'ORD003', customer: 'Lê Văn C', amount: 2100000, status: 'delivered', date: '2024-01-13' }
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+const OrdersTab = ({ orders, loading }) => {
 
   return (
     <div className="p-6">
@@ -578,15 +568,15 @@ const OrdersTab = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {orders.map((order) => (
-                <tr key={order.id}>
+                <tr key={order._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {order.id}
+                    {order.orderNumber}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.customer}
+                    {order.user?.name || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.amount.toLocaleString()}đ
+                    {order.totalAmount?.toLocaleString()}đ
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -599,11 +589,17 @@ const OrdersTab = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(order.date).toLocaleDateString('vi-VN')}
+                    {new Date(order.createdAt).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">Xem</button>
-                    <button className="text-green-600 hover:text-green-900">Cập nhật</button>
+                    <button className="text-blue-600 hover:text-blue-900 mr-3">
+                      <EyeIcon className="h-4 w-4 inline mr-1" />
+                      Xem
+                    </button>
+                    <button className="text-green-600 hover:text-green-900">
+                      <PencilIcon className="h-4 w-4 inline mr-1" />
+                      Cập nhật
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -692,13 +688,12 @@ const ChatbotTab = () => {
 };
 
 // Settings Tab Component
-const SettingsTab = () => {
-  const [settings, setSettings] = useState({
-    siteName: 'VHA Atelier',
-    siteDescription: 'Thời trang cao cấp',
-    maintenanceMode: false,
-    allowRegistration: true
-  });
+const SettingsTab = ({ systemSettings, loading }) => {
+  const [settings, setSettings] = useState(systemSettings);
+
+  useEffect(() => {
+    setSettings(systemSettings);
+  }, [systemSettings]);
 
   const handleSettingChange = (key, value) => {
     setSettings({ ...settings, [key]: value });
