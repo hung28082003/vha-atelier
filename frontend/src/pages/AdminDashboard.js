@@ -15,15 +15,24 @@ import {
   TrashIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { logout } from '../store/slices/authSlice';
 import { 
   getDashboardStats,
   getUsers,
   getProducts,
   getOrders,
-  getSystemSettings
+  getSystemSettings,
+  updateUser,
+  deleteUser,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  updateOrderStatus
 } from '../store/slices/adminSlice';
+import ProductModal from '../components/admin/ProductModal';
+import UserModal from '../components/admin/UserModal';
+import OrderModal from '../components/admin/OrderModal';
 import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
@@ -39,6 +48,12 @@ const AdminDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Modal states
+  const [productModal, setProductModal] = useState({ isOpen: false, product: null });
+  const [userModal, setUserModal] = useState({ isOpen: false, user: null });
+  const [orderModal, setOrderModal] = useState({ isOpen: false, order: null });
+  const [categories, setCategories] = useState([]);
 
   // Redirect if not admin
   useEffect(() => {
@@ -79,6 +94,47 @@ const AdminDashboard = () => {
     dispatch(logout());
     toast.success('Đăng xuất thành công!');
     navigate('/');
+  };
+
+  // Product handlers
+  const handleCreateProduct = () => {
+    setProductModal({ isOpen: true, product: null });
+  };
+
+  const handleEditProduct = (product) => {
+    setProductModal({ isOpen: true, product });
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+      try {
+        await dispatch(deleteProduct(productId)).unwrap();
+        toast.success('Xóa sản phẩm thành công!');
+      } catch (error) {
+        toast.error('Lỗi khi xóa sản phẩm');
+      }
+    }
+  };
+
+  // User handlers
+  const handleEditUser = (user) => {
+    setUserModal({ isOpen: true, user });
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm('Bạn có chắc muốn xóa người dùng này?')) {
+      try {
+        await dispatch(deleteUser(userId)).unwrap();
+        toast.success('Xóa người dùng thành công!');
+      } catch (error) {
+        toast.error('Lỗi khi xóa người dùng');
+      }
+    }
+  };
+
+  // Order handlers
+  const handleViewOrder = (order) => {
+    setOrderModal({ isOpen: true, order });
   };
 
   const adminTabs = [
@@ -125,11 +181,32 @@ const AdminDashboard = () => {
       case 'dashboard':
         return <DashboardTab dashboardStats={dashboardStats} loading={loading.dashboard} />;
       case 'users':
-        return <UsersTab users={users} loading={loading.users} />;
+        return (
+          <UsersTab 
+            users={users} 
+            loading={loading.users}
+            onEditUser={handleEditUser}
+            onDeleteUser={handleDeleteUser}
+          />
+        );
       case 'products':
-        return <ProductsTab products={products} loading={loading.products} />;
+        return (
+          <ProductsTab 
+            products={products} 
+            loading={loading.products}
+            onCreateProduct={handleCreateProduct}
+            onEditProduct={handleEditProduct}
+            onDeleteProduct={handleDeleteProduct}
+          />
+        );
       case 'orders':
-        return <OrdersTab orders={orders} loading={loading.orders} />;
+        return (
+          <OrdersTab 
+            orders={orders} 
+            loading={loading.orders}
+            onViewOrder={handleViewOrder}
+          />
+        );
       case 'chatbot':
         return <ChatbotTab />;
       case 'settings':
@@ -221,6 +298,26 @@ const AdminDashboard = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Modals */}
+      <ProductModal
+        isOpen={productModal.isOpen}
+        onClose={() => setProductModal({ isOpen: false, product: null })}
+        product={productModal.product}
+        categories={categories}
+      />
+
+      <UserModal
+        isOpen={userModal.isOpen}
+        onClose={() => setUserModal({ isOpen: false, user: null })}
+        user={userModal.user}
+      />
+
+      <OrderModal
+        isOpen={orderModal.isOpen}
+        onClose={() => setOrderModal({ isOpen: false, order: null })}
+        order={orderModal.order}
+      />
     </div>
   );
 };
@@ -352,7 +449,7 @@ const DashboardTab = ({ dashboardStats, loading }) => {
 };
 
 // Users Tab Component
-const UsersTab = ({ users, loading }) => {
+const UsersTab = ({ users, loading, onEditUser, onDeleteUser }) => {
 
   return (
     <div className="p-6">
@@ -439,13 +536,16 @@ const UsersTab = ({ users, loading }) => {
 };
 
 // Products Tab Component
-const ProductsTab = ({ products, loading }) => {
+const ProductsTab = ({ products, loading, onCreateProduct, onEditProduct, onDeleteProduct }) => {
 
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Quản lý sản phẩm</h2>
-        <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+        <button 
+          onClick={onCreateProduct}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+        >
           <PlusIcon className="h-4 w-4 mr-2" />
           Thêm sản phẩm
         </button>
@@ -527,7 +627,7 @@ const ProductsTab = ({ products, loading }) => {
 };
 
 // Orders Tab Component
-const OrdersTab = ({ orders, loading }) => {
+const OrdersTab = ({ orders, loading, onViewOrder }) => {
 
   return (
     <div className="p-6">

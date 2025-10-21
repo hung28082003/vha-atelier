@@ -22,18 +22,6 @@ const RegisterPage = () => {
         {/* Register Form */}
         <RegisterForm />
 
-        {/* Additional Help */}
-        <div className="text-center">
-          <p className="text-sm text-earth-600">
-            Đã có tài khoản?{' '}
-            <Link
-              to="/login"
-              className="font-medium text-warm-terracotta hover:text-warm-rust transition-colors duration-300"
-            >
-              Đăng nhập ngay
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );

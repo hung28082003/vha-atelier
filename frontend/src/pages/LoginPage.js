@@ -22,18 +22,6 @@ const LoginPage = () => {
         {/* Login Form */}
         <LoginForm />
 
-        {/* Additional Help */}
-        <div className="text-center">
-          <p className="text-sm text-earth-600">
-            Chưa có tài khoản?{' '}
-            <Link
-              to="/register"
-              className="font-medium text-warm-terracotta hover:text-warm-rust transition-colors duration-300"
-            >
-              Đăng ký ngay
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );
