@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { handleValidationErrors } = require('../middleware/validation');
 const {
   getDashboardStats,
   getUsers,
@@ -35,7 +36,7 @@ router.put('/users/:id', [
   body('email').optional().isEmail().withMessage('Email không hợp lệ'),
   body('role').optional().isIn(['user', 'admin', 'moderator']).withMessage('Vai trò không hợp lệ'),
   body('isActive').optional().isBoolean().withMessage('Trạng thái phải là boolean')
-], updateUser);
+], handleValidationErrors, updateUser);
 router.delete('/users/:id', deleteUser);
 
 // Product management routes
@@ -46,13 +47,13 @@ router.post('/products', [
   body('price').isNumeric().withMessage('Giá phải là số'),
   body('stock').isInt({ min: 0 }).withMessage('Số lượng phải là số nguyên dương'),
   body('category').isMongoId().withMessage('Danh mục không hợp lệ')
-], createProduct);
+], handleValidationErrors, createProduct);
 router.put('/products/:id', [
   body('name').optional().isLength({ min: 1 }).withMessage('Tên sản phẩm không được rỗng'),
   body('price').optional().isNumeric().withMessage('Giá phải là số'),
   body('stock').optional().isInt({ min: 0 }).withMessage('Số lượng phải là số nguyên dương'),
   body('category').optional().isMongoId().withMessage('Danh mục không hợp lệ')
-], updateProduct);
+], handleValidationErrors, updateProduct);
 router.delete('/products/:id', deleteProduct);
 
 // Order management routes
@@ -61,7 +62,7 @@ router.get('/orders/:id', getOrderById);
 router.put('/orders/:id/status', [
   body('status').isIn(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']).withMessage('Trạng thái không hợp lệ'),
   body('notes').optional().isLength({ max: 500 }).withMessage('Ghi chú không được quá 500 ký tự')
-], updateOrderStatus);
+], handleValidationErrors, updateOrderStatus);
 
 // Chatbot management routes
 router.get('/chatbot/conversations', getChatbotConversations);
@@ -77,6 +78,6 @@ router.put('/settings', [
   body('chatbotWelcomeMessage').optional().isLength({ max: 200 }).withMessage('Tin nhắn chào không được quá 200 ký tự'),
   body('emailNotifications').optional().isBoolean().withMessage('Thông báo email phải là boolean'),
   body('smsNotifications').optional().isBoolean().withMessage('Thông báo SMS phải là boolean')
-], updateSystemSettings);
+], handleValidationErrors, updateSystemSettings);
 
 module.exports = router;

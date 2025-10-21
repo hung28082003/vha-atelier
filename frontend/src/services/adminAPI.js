@@ -109,7 +109,8 @@ export const getSystemSettings = () => adminAPI.get('/admin/settings');
 
 export const updateSystemSettings = (settings) => adminAPI.put('/admin/settings', settings);
 
-const adminAPIService = {
+// Export all functions as named exports
+export {
   getDashboardStats,
   getUsers,
   getUserById,
@@ -127,5 +128,3 @@ const adminAPIService = {
   getSystemSettings,
   updateSystemSettings
 };
-
-export default adminAPIService;

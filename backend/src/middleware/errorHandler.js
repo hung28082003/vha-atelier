@@ -1,132 +1,77 @@
-// Global error handling middleware
-const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
+const AppError = require('../utils/appError');
 
-  // Log error for debugging
-  console.error('Error:', err);
+const handleCastErrorDB = (err) => {
+  const message = `Invalid ${err.path}: ${err.value}`;
+  return new AppError(message, 400);
+};
 
-  // Mongoose bad ObjectId
-  if (err.name === 'CastError') {
-    const message = 'Tài nguyên không tồn tại';
-    error = {
-      message,
-      statusCode: 404
-    };
-  }
+const handleDuplicateFieldsDB = (err) => {
+  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  const message = `Duplicate field value: ${value}. Please use another value!`;
+  return new AppError(message, 400);
+};
 
-  // Mongoose duplicate key
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    const message = `${field} đã tồn tại`;
-    error = {
-      message,
-      statusCode: 400
-    };
-  }
+const handleValidationErrorDB = (err) => {
+  const errors = Object.values(err.errors).map(el => el.message);
+  const message = `Invalid input data. ${errors.join('. ')}`;
+  return new AppError(message, 400);
+};
 
-  // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map(val => val.message).join(', ');
-    error = {
-      message,
-      statusCode: 400
-    };
-  }
+const handleJWTError = () =>
+  new AppError('Invalid token. Please log in again!', 401);
 
-  // JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    const message = 'Token không hợp lệ';
-    error = {
-      message,
-      statusCode: 401
-    };
-  }
+const handleJWTExpiredError = () =>
+  new AppError('Your token has expired! Please log in again.', 401);
 
-  if (err.name === 'TokenExpiredError') {
-    const message = 'Token đã hết hạn';
-    error = {
-      message,
-      statusCode: 401
-    };
-  }
-
-  // File upload errors
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    const message = 'File quá lớn';
-    error = {
-      message,
-      statusCode: 400
-    };
-  }
-
-  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-    const message = 'File không được hỗ trợ';
-    error = {
-      message,
-      statusCode: 400
-    };
-  }
-
-  // Rate limiting errors
-  if (err.status === 429) {
-    const message = 'Quá nhiều yêu cầu, vui lòng thử lại sau';
-    error = {
-      message,
-      statusCode: 429
-    };
-  }
-
-  // Default error
-  const statusCode = error.statusCode || 500;
-  const message = error.message || 'Lỗi máy chủ nội bộ';
-
-  res.status(statusCode).json({
+const sendErrorDev = (err, res) => {
+  res.status(err.statusCode).json({
     success: false,
-    message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    error: err,
+    message: err.message,
+    stack: err.stack
   });
 };
 
-// 404 handler
+const sendErrorProd = (err, res) => {
+  // Operational, trusted error: send message to client
+  if (err.isOperational) {
+    res.status(err.statusCode).json({
+      success: false,
+      message: err.message
+    });
+  } else {
+    // Programming or other unknown error: don't leak error details
+    console.error('ERROR 💥', err);
+    res.status(500).json({
+      success: false,
+      message: 'Something went wrong!'
+    });
+  }
+};
+
 const notFound = (req, res, next) => {
-  const error = new Error(`Không tìm thấy - ${req.originalUrl}`);
-  res.status(404);
+  const error = new AppError(`Not found - ${req.originalUrl}`, 404);
   next(error);
 };
 
-// Async error wrapper
-const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
+const errorHandler = (err, req, res, next) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
 
-// Custom error class
-class AppError extends Error {
-  constructor(message, statusCode) {
-    super(message);
-    this.statusCode = statusCode;
-    this.isOperational = true;
+  if (process.env.NODE_ENV === 'development') {
+    sendErrorDev(err, res);
+  } else {
+    let error = { ...err };
+    error.message = err.message;
 
-    Error.captureStackTrace(this, this.constructor);
+    if (error.name === 'CastError') error = handleCastErrorDB(error);
+    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
+    if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
+    if (error.name === 'JsonWebTokenError') error = handleJWTError();
+    if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
+
+    sendErrorProd(error, res);
   }
-}
-
-// Unhandled promise rejection handler
-process.on('unhandledRejection', (err, promise) => {
-  console.error('Unhandled Promise Rejection:', err.message);
-  // Close server & exit process
-  process.exit(1);
-});
-
-// Uncaught exception handler
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err.message);
-  process.exit(1);
-});
-
-module.exports = {
-  errorHandler,
-  notFound,
-  asyncHandler,
-  AppError
 };
+
+module.exports = { errorHandler, notFound };
