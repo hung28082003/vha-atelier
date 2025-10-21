@@ -9,7 +9,12 @@ const {
   updateUser,
   deleteUser,
   getProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
   getOrders,
+  getOrderById,
   updateOrderStatus,
   getChatbotConversations,
   getSystemSettings,
@@ -35,9 +40,24 @@ router.delete('/users/:id', deleteUser);
 
 // Product management routes
 router.get('/products', getProducts);
+router.get('/products/:id', getProductById);
+router.post('/products', [
+  body('name').isLength({ min: 1 }).withMessage('Tên sản phẩm là bắt buộc'),
+  body('price').isNumeric().withMessage('Giá phải là số'),
+  body('stock').isInt({ min: 0 }).withMessage('Số lượng phải là số nguyên dương'),
+  body('category').isMongoId().withMessage('Danh mục không hợp lệ')
+], createProduct);
+router.put('/products/:id', [
+  body('name').optional().isLength({ min: 1 }).withMessage('Tên sản phẩm không được rỗng'),
+  body('price').optional().isNumeric().withMessage('Giá phải là số'),
+  body('stock').optional().isInt({ min: 0 }).withMessage('Số lượng phải là số nguyên dương'),
+  body('category').optional().isMongoId().withMessage('Danh mục không hợp lệ')
+], updateProduct);
+router.delete('/products/:id', deleteProduct);
 
 // Order management routes
 router.get('/orders', getOrders);
+router.get('/orders/:id', getOrderById);
 router.put('/orders/:id/status', [
   body('status').isIn(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']).withMessage('Trạng thái không hợp lệ'),
   body('notes').optional().isLength({ max: 500 }).withMessage('Ghi chú không được quá 500 ký tự')

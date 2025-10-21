@@ -1,506 +1,431 @@
+const asyncHandler = require('../utils/asyncHandler');
+const AppError = require('../utils/appError');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Category = require('../models/Category');
-const { validationResult } = require('express-validator');
+const ChatbotConversation = require('../models/ChatbotConversation');
 
-// Get dashboard statistics
-const getDashboardStats = async (req, res) => {
-  try {
-    const totalUsers = await User.countDocuments();
-    const totalProducts = await Product.countDocuments();
-    const totalOrders = await Order.countDocuments();
-    
-    // Calculate total revenue
-    const revenueResult = await Order.aggregate([
-      { $match: { status: { $in: ['delivered', 'completed'] } } },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-    ]);
-    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+// Dashboard Stats
+const getDashboardStats = asyncHandler(async (req, res) => {
+  const totalUsers = await User.countDocuments();
+  const totalProducts = await Product.countDocuments();
+  const totalOrders = await Order.countDocuments();
+  
+  // Calculate total revenue
+  const revenueResult = await Order.aggregate([
+    { $match: { status: { $in: ['delivered', 'shipped'] } } },
+    { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+  ]);
+  const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
 
-    // Get recent orders
-    const recentOrders = await Order.find()
-      .populate('user', 'name email')
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('orderNumber user totalAmount status createdAt');
+  // Get recent orders
+  const recentOrders = await Order.find()
+    .populate('user', 'name email')
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .select('orderNumber user totalAmount status createdAt');
 
-    // Get monthly stats
-    const currentMonth = new Date();
-    currentMonth.setDate(1);
-    const lastMonth = new Date(currentMonth);
-    lastMonth.setMonth(lastMonth.getMonth() - 1);
+  // Get monthly stats for the last 6 months
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const monthlyStats = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: lastMonth }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            month: { $month: '$createdAt' },
-            year: { $year: '$createdAt' }
-          },
-          count: { $sum: 1 },
-          revenue: { $sum: '$totalAmount' }
-        }
-      },
-      {
-        $sort: { '_id.year': 1, '_id.month': 1 }
-      }
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        stats: {
-          totalUsers,
-          totalProducts,
-          totalOrders,
-          totalRevenue
+  const monthlyStats = await Order.aggregate([
+    { $match: { createdAt: { $gte: sixMonthsAgo } } },
+    {
+      $group: {
+        _id: {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
         },
-        recentOrders,
-        monthlyStats
+        orders: { $sum: 1 },
+        revenue: { $sum: '$totalAmount' }
       }
-    });
-  } catch (error) {
-    console.error('Get Dashboard Stats Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi lấy thống kê dashboard'
-    });
+    },
+    { $sort: { '_id.year': 1, '_id.month': 1 } }
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      totalUsers,
+      totalProducts,
+      totalOrders,
+      totalRevenue,
+      recentOrders,
+      monthlyStats
+    }
+  });
+});
+
+// Users Management
+const getUsers = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const filter = {};
+  if (req.query.search) {
+    filter.$or = [
+      { name: { $regex: req.query.search, $options: 'i' } },
+      { email: { $regex: req.query.search, $options: 'i' } }
+    ];
   }
-};
-
-// Get all users with pagination
-const getUsers = async (req, res) => {
-  try {
-    const { page = 1, limit = 10, search = '', role = '', status = '' } = req.query;
-    
-    const query = {};
-    
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
-      ];
-    }
-    
-    if (role) {
-      query.role = role;
-    }
-    
-    if (status) {
-      query.isActive = status === 'active';
-    }
-
-    const users = await User.find(query)
-      .select('-password')
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
-
-    const total = await User.countDocuments(query);
-
-    res.json({
-      success: true,
-      data: {
-        users,
-        pagination: {
-          current: parseInt(page),
-          pages: Math.ceil(total / limit),
-          total
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Get Users Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi lấy danh sách người dùng'
-    });
+  if (req.query.role) {
+    filter.role = req.query.role;
   }
-};
-
-// Get user by ID
-const getUserById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const user = await User.findById(id).select('-password');
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy người dùng'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: user
-    });
-  } catch (error) {
-    console.error('Get User by ID Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi lấy thông tin người dùng'
-    });
+  if (req.query.status !== undefined) {
+    filter.isActive = req.query.status === 'active';
   }
-};
 
-// Update user
-const updateUser = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Dữ liệu không hợp lệ',
-        errors: errors.array()
-      });
-    }
+  const users = await User.find(filter)
+    .select('-password')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
 
-    const { id } = req.params;
-    const { name, email, role, isActive } = req.body;
+  const total = await User.countDocuments(filter);
 
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy người dùng'
-      });
-    }
-
-    // Check if email is already taken by another user
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email, _id: { $ne: id } });
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'Email đã được sử dụng bởi người dùng khác'
-        });
+  res.json({
+    success: true,
+    data: {
+      users,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total
       }
     }
+  });
+});
 
-    // Update user
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (role) user.role = role;
-    if (typeof isActive === 'boolean') user.isActive = isActive;
+const getUserById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.userId).select('-password');
+  
+  if (!user) {
+    throw new AppError('Không tìm thấy người dùng', 404);
+  }
 
-    await user.save();
+  res.json({
+    success: true,
+    data: user
+  });
+});
 
-    res.json({
-      success: true,
-      message: 'Cập nhật người dùng thành công',
-      data: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive
+const updateUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const updateData = req.body;
+
+  // Remove password from update data if present
+  delete updateData.password;
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    updateData,
+    { new: true, runValidators: true }
+  ).select('-password');
+
+  if (!user) {
+    throw new AppError('Không tìm thấy người dùng', 404);
+  }
+
+  res.json({
+    success: true,
+    data: user
+  });
+});
+
+const deleteUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError('Không tìm thấy người dùng', 404);
+  }
+
+  // Check if user has orders
+  const userOrders = await Order.countDocuments({ user: userId });
+  if (userOrders > 0) {
+    throw new AppError('Không thể xóa người dùng đã có đơn hàng', 400);
+  }
+
+  await User.findByIdAndDelete(userId);
+
+  res.json({
+    success: true,
+    message: 'Xóa người dùng thành công'
+  });
+});
+
+// Products Management
+const getProducts = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const filter = {};
+  if (req.query.search) {
+    filter.$or = [
+      { name: { $regex: req.query.search, $options: 'i' } },
+      { description: { $regex: req.query.search, $options: 'i' } }
+    ];
+  }
+  if (req.query.category) {
+    filter.category = req.query.category;
+  }
+  if (req.query.status !== undefined) {
+    filter.isActive = req.query.status === 'active';
+  }
+
+  const products = await Product.find(filter)
+    .populate('category', 'name')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Product.countDocuments(filter);
+
+  res.json({
+    success: true,
+    data: {
+      products,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total
       }
-    });
-  } catch (error) {
-    console.error('Update User Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi cập nhật người dùng'
-    });
+    }
+  });
+});
+
+const getProductById = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.productId)
+    .populate('category', 'name');
+
+  if (!product) {
+    throw new AppError('Không tìm thấy sản phẩm', 404);
   }
-};
 
-// Delete user
-const deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
+  res.json({
+    success: true,
+    data: product
+  });
+});
 
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy người dùng'
-      });
+const createProduct = asyncHandler(async (req, res) => {
+  const productData = req.body;
+
+  // Validate category exists
+  if (productData.category) {
+    const category = await Category.findById(productData.category);
+    if (!category) {
+      throw new AppError('Danh mục không tồn tại', 400);
     }
-
-    // Prevent deleting admin users
-    if (user.role === 'admin') {
-      return res.status(400).json({
-        success: false,
-        message: 'Không thể xóa tài khoản admin'
-      });
-    }
-
-    await User.findByIdAndDelete(id);
-
-    res.json({
-      success: true,
-      message: 'Xóa người dùng thành công'
-    });
-  } catch (error) {
-    console.error('Delete User Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi xóa người dùng'
-    });
   }
-};
 
-// Get all products with pagination
-const getProducts = async (req, res) => {
-  try {
-    const { page = 1, limit = 10, search = '', category = '', status = '' } = req.query;
-    
-    const query = {};
-    
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
+  const product = await Product.create(productData);
+
+  res.status(201).json({
+    success: true,
+    data: product
+  });
+});
+
+const updateProduct = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const updateData = req.body;
+
+  // Validate category exists if provided
+  if (updateData.category) {
+    const category = await Category.findById(updateData.category);
+    if (!category) {
+      throw new AppError('Danh mục không tồn tại', 400);
     }
-    
-    if (category) {
-      query.category = category;
-    }
-    
-    if (status) {
-      query.isActive = status === 'active';
-    }
+  }
 
-    const products = await Product.find(query)
-      .populate('category', 'name')
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+  const product = await Product.findByIdAndUpdate(
+    productId,
+    updateData,
+    { new: true, runValidators: true }
+  ).populate('category', 'name');
 
-    const total = await Product.countDocuments(query);
+  if (!product) {
+    throw new AppError('Không tìm thấy sản phẩm', 404);
+  }
 
-    res.json({
-      success: true,
-      data: {
-        products,
-        pagination: {
-          current: parseInt(page),
-          pages: Math.ceil(total / limit),
-          total
-        }
+  res.json({
+    success: true,
+    data: product
+  });
+});
+
+const deleteProduct = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+
+  // Check if product exists
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new AppError('Không tìm thấy sản phẩm', 404);
+  }
+
+  // Check if product has orders
+  const productOrders = await Order.countDocuments({
+    'items.product': productId
+  });
+  if (productOrders > 0) {
+    throw new AppError('Không thể xóa sản phẩm đã có đơn hàng', 400);
+  }
+
+  await Product.findByIdAndDelete(productId);
+
+  res.json({
+    success: true,
+    message: 'Xóa sản phẩm thành công'
+  });
+});
+
+// Orders Management
+const getOrders = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const filter = {};
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
+  if (req.query.search) {
+    filter.$or = [
+      { orderNumber: { $regex: req.query.search, $options: 'i' } },
+      { 'user.name': { $regex: req.query.search, $options: 'i' } }
+    ];
+  }
+
+  const orders = await Order.find(filter)
+    .populate('user', 'name email')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Order.countDocuments(filter);
+
+  res.json({
+    success: true,
+    data: {
+      orders,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total
       }
-    });
-  } catch (error) {
-    console.error('Get Products Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi lấy danh sách sản phẩm'
-    });
+    }
+  });
+});
+
+const getOrderById = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.orderId)
+    .populate('user', 'name email phone')
+    .populate('items.product', 'name images price');
+
+  if (!order) {
+    throw new AppError('Không tìm thấy đơn hàng', 404);
   }
-};
 
-// Get all orders with pagination
-const getOrders = async (req, res) => {
-  try {
-    const { page = 1, limit = 10, search = '', status = '', dateFrom = '', dateTo = '' } = req.query;
-    
-    const query = {};
-    
-    if (search) {
-      query.$or = [
-        { orderNumber: { $regex: search, $options: 'i' } },
-        { 'user.name': { $regex: search, $options: 'i' } },
-        { 'user.email': { $regex: search, $options: 'i' } }
-      ];
-    }
-    
-    if (status) {
-      query.status = status;
-    }
-    
-    if (dateFrom || dateTo) {
-      query.createdAt = {};
-      if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
-      if (dateTo) query.createdAt.$lte = new Date(dateTo);
-    }
+  res.json({
+    success: true,
+    data: order
+  });
+});
 
-    const orders = await Order.find(query)
-      .populate('user', 'name email')
-      .populate('items.product', 'name price')
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { status, notes } = req.body;
 
-    const total = await Order.countDocuments(query);
+  const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+  if (!validStatuses.includes(status)) {
+    throw new AppError('Trạng thái đơn hàng không hợp lệ', 400);
+  }
 
-    res.json({
-      success: true,
-      data: {
-        orders,
-        pagination: {
-          current: parseInt(page),
-          pages: Math.ceil(total / limit),
-          total
-        }
+  const updateData = { status };
+  if (notes) {
+    updateData.adminNotes = notes;
+  }
+
+  const order = await Order.findByIdAndUpdate(
+    orderId,
+    updateData,
+    { new: true, runValidators: true }
+  ).populate('user', 'name email');
+
+  if (!order) {
+    throw new AppError('Không tìm thấy đơn hàng', 404);
+  }
+
+  res.json({
+    success: true,
+    data: order
+  });
+});
+
+// Chatbot Management
+const getChatbotConversations = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const conversations = await ChatbotConversation.find()
+    .populate('user', 'name email')
+    .sort({ updatedAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await ChatbotConversation.countDocuments();
+
+  res.json({
+    success: true,
+    data: {
+      conversations,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total
       }
-    });
-  } catch (error) {
-    console.error('Get Orders Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi lấy danh sách đơn hàng'
-    });
-  }
-};
-
-// Update order status
-const updateOrderStatus = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Dữ liệu không hợp lệ',
-        errors: errors.array()
-      });
     }
+  });
+});
 
-    const { id } = req.params;
-    const { status, notes } = req.body;
+// System Settings
+const getSystemSettings = asyncHandler(async (req, res) => {
+  // For now, return default settings
+  // In a real app, you'd store these in a database
+  const settings = {
+    siteName: 'VHA Atelier',
+    siteDescription: 'Thời trang cao cấp',
+    maintenanceMode: false,
+    allowRegistration: true,
+    chatbotEnabled: true,
+    chatbotWelcomeMessage: 'Xin chào! Tôi có thể giúp gì cho bạn?',
+    emailNotifications: true,
+    smsNotifications: false
+  };
 
-    const order = await Order.findById(id);
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy đơn hàng'
-      });
-    }
+  res.json({
+    success: true,
+    data: settings
+  });
+});
 
-    order.status = status;
-    if (notes) order.adminNotes = notes;
-    order.updatedAt = new Date();
+const updateSystemSettings = asyncHandler(async (req, res) => {
+  // For now, just return the updated settings
+  // In a real app, you'd save these to a database
+  const settings = req.body;
 
-    await order.save();
-
-    res.json({
-      success: true,
-      message: 'Cập nhật trạng thái đơn hàng thành công',
-      data: {
-        id: order._id,
-        orderNumber: order.orderNumber,
-        status: order.status,
-        adminNotes: order.adminNotes
-      }
-    });
-  } catch (error) {
-    console.error('Update Order Status Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi cập nhật trạng thái đơn hàng'
-    });
-  }
-};
-
-// Get chatbot conversations
-const getChatbotConversations = async (req, res) => {
-  try {
-    const { page = 1, limit = 10, search = '' } = req.query;
-    
-    const query = {};
-    
-    if (search) {
-      query.$or = [
-        { 'user.name': { $regex: search, $options: 'i' } },
-        { 'user.email': { $regex: search, $options: 'i' } },
-        { 'messages.text': { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    const conversations = await ChatbotConversation.find(query)
-      .populate('user', 'name email')
-      .sort({ updatedAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
-
-    const total = await ChatbotConversation.countDocuments(query);
-
-    res.json({
-      success: true,
-      data: {
-        conversations,
-        pagination: {
-          current: parseInt(page),
-          pages: Math.ceil(total / limit),
-          total
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Get Chatbot Conversations Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi lấy danh sách cuộc trò chuyện'
-    });
-  }
-};
-
-// Get system settings
-const getSystemSettings = async (req, res) => {
-  try {
-    // TODO: Implement system settings from database
-    const settings = {
-      siteName: 'VHA Atelier',
-      siteDescription: 'Thời trang cao cấp',
-      maintenanceMode: false,
-      allowRegistration: true,
-      chatbotEnabled: true,
-      chatbotWelcomeMessage: 'Xin chào! Tôi có thể giúp gì cho bạn?',
-      emailNotifications: true,
-      smsNotifications: false
-    };
-
-    res.json({
-      success: true,
-      data: settings
-    });
-  } catch (error) {
-    console.error('Get System Settings Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi lấy cài đặt hệ thống'
-    });
-  }
-};
-
-// Update system settings
-const updateSystemSettings = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Dữ liệu không hợp lệ',
-        errors: errors.array()
-      });
-    }
-
-    const settings = req.body;
-
-    // TODO: Save settings to database
-    // For now, just return success
-
-    res.json({
-      success: true,
-      message: 'Cập nhật cài đặt hệ thống thành công',
-      data: settings
-    });
-  } catch (error) {
-    console.error('Update System Settings Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server khi cập nhật cài đặt hệ thống'
-    });
-  }
-};
+  res.json({
+    success: true,
+    data: settings
+  });
+});
 
 module.exports = {
   getDashboardStats,
@@ -509,7 +434,12 @@ module.exports = {
   updateUser,
   deleteUser,
   getProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
   getOrders,
+  getOrderById,
   updateOrderStatus,
   getChatbotConversations,
   getSystemSettings,
