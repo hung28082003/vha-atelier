@@ -155,7 +155,12 @@ const generateResponse = async (userMessage, conversation, context = {}) => {
 
 // Extract user preferences from message
 const extractUserPreferences = (message, currentPreferences = {}) => {
-  const preferences = { ...currentPreferences };
+  const preferences = { 
+    ...currentPreferences,
+    budget: currentPreferences.budget || null,
+    style: currentPreferences.style || [],
+    colors: currentPreferences.colors || []
+  };
   
   // Extract style preferences
   const styleKeywords = ['casual', 'formal', 'elegant', 'sporty', 'vintage', 'modern', 'minimalist', 'bohemian'];
@@ -209,7 +214,7 @@ const searchProductsByPreferences = async (preferences, limit = 5) => {
   try {
     const filter = { status: 'active', stock: { $gt: 0 } };
     
-    if (preferences.budget) {
+    if (preferences.budget && typeof preferences.budget === 'object' && preferences.budget !== null) {
       filter.price = {
         $gte: preferences.budget.min || 0,
         $lte: preferences.budget.max || 10000000

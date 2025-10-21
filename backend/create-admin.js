@@ -20,7 +20,7 @@ const createAdminUser = async () => {
 
     // Create admin user
     const adminData = {
-      name: 'VHA Admin',
+      name: 'VHA Admin - Hung',
       email: 'admin@vha-atelier.com',
       password: 'admin123456',
       phone: '0123456789',
