@@ -11,6 +11,7 @@ const paymentRoutes = require('./payment');
 const chatbotRoutes = require('./chatbot');
 const userRoutes = require('./userRoutes');
 const adminRoutes = require('./adminRoutes');
+const docsRoutes = require('./docs');
 
 // Health check route
 router.get('/health', (req, res) => {
@@ -32,6 +33,7 @@ router.use('/payment', paymentRoutes);
 router.use('/chatbot', chatbotRoutes);
 router.use('/user', userRoutes);
 router.use('/admin', adminRoutes);
+router.use('/docs', docsRoutes);
 
 // 404 handler for API routes
 router.use('*', (req, res) => {
