@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-// import { useDispatch } from 'react-redux';
+import { createCategory, updateCategory } from '../../services/categoriesAPI';
 import toast from 'react-hot-toast';
 
 const CategoryModal = ({ isOpen, onClose, category = null, onSave }) => {
@@ -44,11 +44,23 @@ const CategoryModal = ({ isOpen, onClose, category = null, onSave }) => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      await onSave(data);
-      toast.success(category ? 'Cập nhật danh mục thành công!' : 'Tạo danh mục thành công!');
+      if (category) {
+        await updateCategory(category._id, data);
+        toast.success('Cập nhật danh mục thành công!');
+      } else {
+        await createCategory(data);
+        toast.success('Tạo danh mục thành công!');
+      }
+      
+      // Call onSave to refresh the categories list
+      if (onSave) {
+        await onSave();
+      }
+      
       onClose();
     } catch (error) {
-      toast.error('Lỗi khi lưu danh mục');
+      console.error('Error saving category:', error);
+      toast.error(error.response?.data?.message || 'Lỗi khi lưu danh mục');
     } finally {
       setIsLoading(false);
     }

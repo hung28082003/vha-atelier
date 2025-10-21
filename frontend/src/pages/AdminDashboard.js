@@ -70,12 +70,7 @@ const AdminDashboard = () => {
       dispatch(getDashboardStats());
       dispatch(getSystemSettings());
       // Load categories for product modal
-      categoriesAPI.fetchCategories({ page: 1, limit: 100 })
-        .then(res => {
-          const categoriesData = res.data.data?.categories || res.data.categories || res.data.data || [];
-          setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-        })
-        .catch(() => setCategories([]));
+      loadCategories();
     }
   }, [dispatch, user]);
 
@@ -155,15 +150,24 @@ const AdminDashboard = () => {
   const handleDeleteCategory = async (categoryId) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
       try {
-        // TODO: Implement delete category API
+        await categoriesAPI.deleteCategory(categoryId);
         toast.success('Xóa danh mục thành công!');
         // Reload categories
-        const response = await categoriesAPI.fetchCategories({ page: 1, limit: 100 });
-        const categoriesData = response.data.data?.categories || response.data.categories || response.data.data || [];
-        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        await loadCategories();
       } catch (error) {
         toast.error('Lỗi khi xóa danh mục');
       }
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const response = await categoriesAPI.fetchCategories({ page: 1, limit: 100 });
+      const categoriesData = response.data.data?.categories || response.data.categories || response.data.data || [];
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      setCategories([]);
     }
   };
 
@@ -376,18 +380,7 @@ const AdminDashboard = () => {
         isOpen={categoryModal.isOpen}
         onClose={() => setCategoryModal({ isOpen: false, category: null })}
         category={categoryModal.category}
-        onSave={async (categoryData) => {
-          try {
-            // TODO: Implement save category API
-            toast.success('Lưu danh mục thành công!');
-            // Reload categories
-            const response = await categoriesAPI.fetchCategories({ page: 1, limit: 100 });
-            const categoriesData = response.data.data?.categories || response.data.categories || response.data.data || [];
-            setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-          } catch (error) {
-            throw error;
-          }
-        }}
+        onSave={loadCategories}
       />
 
       <UserModal
