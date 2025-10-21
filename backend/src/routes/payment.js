@@ -20,6 +20,34 @@ const Order = require('../models/Order');
 const AppError = require('../utils/appError');
 const asyncHandler = require('../utils/asyncHandler');
 
+// @desc    Test payment QR generation
+// @route   POST /api/payment/test-qr
+// @access  Private
+const testPaymentQR = asyncHandler(async (req, res) => {
+  const { amount, description } = req.body;
+
+  try {
+    const qrData = generatePaymentQR({
+      amount,
+      description: description || 'Test Payment',
+      orderId: 'test-' + Date.now()
+    });
+
+    res.json({
+      success: true,
+      message: 'QR code generated successfully',
+      data: {
+        qrCode: qrData.qrCode,
+        amount,
+        description,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+      }
+    });
+  } catch (error) {
+    throw new AppError('Failed to generate QR code', 500);
+  }
+});
+
 // @desc    Generate payment QR code for order
 // @route   POST /api/payment/:orderId/qr
 // @access  Private
@@ -237,6 +265,7 @@ const cancelPayment = asyncHandler(async (req, res) => {
 // Protected routes
 router.use(authenticateToken);
 
+router.post('/test-qr', authenticateToken, testPaymentQR);
 router.post('/:orderId/qr', validateObjectId('orderId'), generateOrderPaymentQR);
 router.post('/:orderId/verify', validateObjectId('orderId'), verifyOrderPayment);
 router.get('/:orderId/status', validateObjectId('orderId'), getPaymentStatus);

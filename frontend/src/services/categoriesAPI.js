@@ -11,6 +11,7 @@ export const fetchCategories = (params = {}) => {
   return api.get(`/categories${query ? `?${query}` : ''}`);
 };
 
-export default { fetchCategories };
+const categoriesService = { fetchCategories };
+export default categoriesService;
 
 

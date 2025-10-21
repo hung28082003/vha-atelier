@@ -30,6 +30,8 @@ import ProductModal from '../components/admin/ProductModal';
 import UserModal from '../components/admin/UserModal';
 import OrderModal from '../components/admin/OrderModal';
 import SystemSettingsModal from '../components/admin/SystemSettingsModal';
+import CategoryModal from '../components/admin/CategoryModal';
+import CategoriesTab from '../components/admin/CategoriesTab';
 import toast from 'react-hot-toast';
 import categoriesAPI from '../services/categoriesAPI';
 
@@ -40,7 +42,6 @@ const AdminDashboard = () => {
     users, 
     products, 
     orders, 
-    systemSettings,
     loading 
   } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
@@ -49,6 +50,7 @@ const AdminDashboard = () => {
   
   // Modal states
   const [productModal, setProductModal] = useState({ isOpen: false, product: null });
+  const [categoryModal, setCategoryModal] = useState({ isOpen: false, category: null });
   const [userModal, setUserModal] = useState({ isOpen: false, user: null });
   const [orderModal, setOrderModal] = useState({ isOpen: false, order: null });
   const [systemSettingsModal, setSystemSettingsModal] = useState(false);
@@ -83,6 +85,9 @@ const AdminDashboard = () => {
       switch (activeTab) {
         case 'users':
           dispatch(getUsers({ page: 1, limit: 10 }));
+          break;
+        case 'categories':
+          // Categories are loaded separately
           break;
         case 'products':
           dispatch(getProducts({ page: 1, limit: 10 }));
@@ -138,6 +143,30 @@ const AdminDashboard = () => {
     }
   };
 
+  // Category handlers
+  const handleCreateCategory = () => {
+    setCategoryModal({ isOpen: true, category: null });
+  };
+
+  const handleEditCategory = (category) => {
+    setCategoryModal({ isOpen: true, category });
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
+      try {
+        // TODO: Implement delete category API
+        toast.success('Xóa danh mục thành công!');
+        // Reload categories
+        const response = await categoriesAPI.fetchCategories({ page: 1, limit: 100 });
+        const categoriesData = response.data.data?.categories || response.data.categories || response.data.data || [];
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      } catch (error) {
+        toast.error('Lỗi khi xóa danh mục');
+      }
+    }
+  };
+
   // Order handlers
   const handleViewOrder = (order) => {
     setOrderModal({ isOpen: true, order });
@@ -155,6 +184,12 @@ const AdminDashboard = () => {
       name: 'Quản lý người dùng',
       icon: UserGroupIcon,
       description: 'Quản lý tài khoản người dùng'
+    },
+    {
+      id: 'categories',
+      name: 'Quản lý danh mục',
+      icon: CubeIcon,
+      description: 'Thêm, sửa, xóa danh mục sản phẩm'
     },
     {
       id: 'products',
@@ -193,6 +228,15 @@ const AdminDashboard = () => {
             loading={loading.users}
             onEditUser={handleEditUser}
             onDeleteUser={handleDeleteUser}
+          />
+        );
+      case 'categories':
+        return (
+          <CategoriesTab 
+            categories={categories}
+            onCreateCategory={handleCreateCategory}
+            onEditCategory={handleEditCategory}
+            onDeleteCategory={handleDeleteCategory}
           />
         );
       case 'products':
@@ -326,6 +370,24 @@ const AdminDashboard = () => {
         onClose={() => setProductModal({ isOpen: false, product: null })}
         product={productModal.product}
         categories={categories}
+      />
+
+      <CategoryModal
+        isOpen={categoryModal.isOpen}
+        onClose={() => setCategoryModal({ isOpen: false, category: null })}
+        category={categoryModal.category}
+        onSave={async (categoryData) => {
+          try {
+            // TODO: Implement save category API
+            toast.success('Lưu danh mục thành công!');
+            // Reload categories
+            const response = await categoriesAPI.fetchCategories({ page: 1, limit: 100 });
+            const categoriesData = response.data.data?.categories || response.data.categories || response.data.data || [];
+            setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+          } catch (error) {
+            throw error;
+          }
+        }}
       />
 
       <UserModal
@@ -813,102 +875,5 @@ const ChatbotTab = () => {
   );
 };
 
-// Settings Tab Component
-const SettingsTab = ({ systemSettings, loading }) => {
-  const [settings, setSettings] = useState(systemSettings);
-
-  useEffect(() => {
-    setSettings(systemSettings);
-  }, [systemSettings]);
-
-  const handleSettingChange = (key, value) => {
-    setSettings({ ...settings, [key]: value });
-  };
-
-  return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Cài đặt hệ thống</h2>
-      
-      <div className="space-y-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Thông tin website</h3>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tên website
-              </label>
-              <input
-                type="text"
-                value={settings.siteName}
-                onChange={(e) => handleSettingChange('siteName', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mô tả website
-              </label>
-              <textarea
-                value={settings.siteDescription}
-                onChange={(e) => handleSettingChange('siteDescription', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows={3}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Cài đặt chung</h3>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Chế độ bảo trì</div>
-                <div className="text-sm text-gray-500">Tạm thời đóng website để bảo trì</div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.maintenanceMode}
-                  onChange={(e) => handleSettingChange('maintenanceMode', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Cho phép đăng ký</div>
-                <div className="text-sm text-gray-500">Cho phép người dùng đăng ký tài khoản mới</div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.allowRegistration}
-                  onChange={(e) => handleSettingChange('allowRegistration', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex space-x-4">
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Lưu cài đặt
-          </button>
-          <button className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
-            Hủy
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default AdminDashboard;

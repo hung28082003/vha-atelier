@@ -74,4 +74,26 @@ conversationSchema.methods.updateContext = function(newContext) {
   return this.save();
 };
 
+// Static methods
+conversationSchema.statics.findActiveByUser = function(userId) {
+  return this.findOne({ user: userId, isActive: true });
+};
+
+conversationSchema.statics.findBySessionId = function(sessionId) {
+  return this.findOne({ sessionId });
+};
+
+conversationSchema.statics.createNewConversation = function(userId, sessionId) {
+  return this.create({
+    sessionId,
+    user: userId,
+    messages: [],
+    context: {
+      userPreferences: {},
+      currentIntent: null,
+      conversationFlow: 'greeting'
+    }
+  });
+};
+
 module.exports = mongoose.model('ChatbotConversation', conversationSchema);

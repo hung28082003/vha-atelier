@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { getSystemSettings, updateSystemSettings } from '../../store/slices/adminSlice';
+import { updateSystemSettings } from '../../store/slices/adminSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 
@@ -14,7 +14,6 @@ const SystemSettingsModal = ({ isOpen, onClose }) => {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
     setValue
   } = useForm({
     defaultValues: {

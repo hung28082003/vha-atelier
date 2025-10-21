@@ -58,13 +58,28 @@ const ProductModal = ({ isOpen, onClose, product = null, categories = [] }) => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
+      // Process sizes and colors from comma-separated strings to arrays of objects
+      const sizes = data.sizes ? data.sizes.split(',').map((size, index) => ({
+        size: size.trim(),
+        stock: parseInt(data.stock) || 0,
+        sku: `${data.name?.substring(0, 3).toUpperCase() || 'SKU'}-${size.trim()}`
+      })) : [];
+
+      const colors = data.colors ? data.colors.split(',').map((color, index) => ({
+        name: color.trim(),
+        hex: getColorHex(color.trim())
+      })) : [];
+
       const productData = {
         ...data,
         images: selectedImages,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : [],
         price: parseFloat(data.price),
         stock: parseInt(data.stock),
-        salePrice: data.salePrice ? parseFloat(data.salePrice) : null
+        salePrice: data.salePrice ? parseFloat(data.salePrice) : null,
+        sizes,
+        colors,
+        slug: generateSlug(data.name)
       };
 
       if (product) {
@@ -79,6 +94,37 @@ const ProductModal = ({ isOpen, onClose, product = null, categories = [] }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper functions
+  const generateSlug = (name) => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
+  const getColorHex = (colorName) => {
+    const colorMap = {
+      'đen': '#000000',
+      'trắng': '#FFFFFF',
+      'xám': '#808080',
+      'xanh': '#0066CC',
+      'đỏ': '#CC0000',
+      'vàng': '#FFD700',
+      'hồng': '#FFC0CB',
+      'tím': '#800080',
+      'cam': '#FFA500',
+      'xanh lá': '#008000',
+      'denim': '#0066CC',
+      'nâu': '#8B4513'
+    };
+    return colorMap[colorName.toLowerCase()] || '#000000';
   };
 
   const handleImageUpload = (e) => {
