@@ -31,13 +31,13 @@ const startConversation = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'Bắt đầu cuộc trò chuyện thành công',
-    data: {
-      conversation: {
-        sessionId: conversation.sessionId,
-        messages: conversation.getRecentMessages(5),
-        userPreferences: conversation.context.userPreferences
+      data: {
+        conversation: {
+          sessionId: conversation.sessionId,
+          messages: conversation.getRecentMessages(5),
+          userPreferences: conversation.context?.userPreferences || {}
+        }
       }
-    }
   });
 });
 
@@ -71,14 +71,14 @@ const sendMessage = asyncHandler(async (req, res) => {
   await conversation.addMessage('user', message.trim());
   
   // Extract user preferences from message
-  const newPreferences = extractUserPreferences(message, conversation.context.userPreferences);
+  const newPreferences = extractUserPreferences(message, conversation.context?.userPreferences || {});
   if (Object.keys(newPreferences).length > 0) {
     await conversation.updateUserPreferences(newPreferences);
   }
   
   // Search for relevant products
   const relevantProducts = await searchProductsByPreferences(
-    conversation.context.userPreferences, 
+    conversation.context?.userPreferences || {}, 
     3
   );
   
@@ -128,7 +128,7 @@ const sendMessage = asyncHandler(async (req, res) => {
       response: responseMessage,
       sessionId: conversation.sessionId,
       recommendations: recommendations,
-      userPreferences: conversation.context.userPreferences,
+      userPreferences: conversation.context?.userPreferences || {},
       messageCount: conversation.analytics.messageCount
     }
   });
@@ -236,7 +236,7 @@ const getProductRecommendations = asyncHandler(async (req, res) => {
   }
   
   const recommendations = await searchProductsByPreferences(
-    conversation.context.userPreferences,
+    conversation.context?.userPreferences || {},
     parseInt(limit)
   );
   

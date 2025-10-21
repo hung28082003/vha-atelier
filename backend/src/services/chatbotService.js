@@ -89,7 +89,7 @@ const generateResponse = async (userMessage, conversation, context = {}) => {
       contextInfo += await getCategoryContext(context.categories);
     }
     
-    if (conversation.context.userPreferences) {
+    if (conversation.context && conversation.context.userPreferences) {
       const prefs = conversation.context.userPreferences;
       contextInfo += `\n\nTHÔNG TIN KHÁCH HÀNG:\n`;
       if (prefs.style && prefs.style.length > 0) {
@@ -98,7 +98,7 @@ const generateResponse = async (userMessage, conversation, context = {}) => {
       if (prefs.colors && prefs.colors.length > 0) {
         contextInfo += `- Màu sắc yêu thích: ${prefs.colors.join(', ')}\n`;
       }
-      if (prefs.budget) {
+      if (prefs.budget && typeof prefs.budget === 'object' && prefs.budget !== null) {
         contextInfo += `- Ngân sách: ${prefs.budget.min?.toLocaleString('vi-VN') || 0} - ${prefs.budget.max?.toLocaleString('vi-VN') || 'không giới hạn'} VNĐ\n`;
       }
       if (prefs.size) {
