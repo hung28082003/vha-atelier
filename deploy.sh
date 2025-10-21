@@ -41,3 +41,4 @@ echo "✅ Deployment completed successfully!"
 echo "🌐 Frontend: http://localhost:3000"
 echo "🔧 Backend: http://localhost:5000"
 echo "📚 API Docs: http://localhost:5000/api/docs"
+

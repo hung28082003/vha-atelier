@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const { generateTokens } = require('../middleware/auth');
-const { AppError, asyncHandler } = require('../middleware/errorHandler');
+const AppError = require('../utils/appError');
+const asyncHandler = require('../utils/asyncHandler');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 
@@ -82,7 +83,7 @@ const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   // Find user and include password for comparison
-  const user = await User.findByEmail(email).select('+password');
+  const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
   
   if (!user) {
     throw new AppError('Email hoặc mật khẩu không đúng', 401);

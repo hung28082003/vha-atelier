@@ -192,7 +192,7 @@ const ProductModal = ({ isOpen, onClose, product = null, categories = [] }) => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Chọn danh mục</option>
-                    {categories.map(cat => (
+                    {Array.isArray(categories) && categories.map(cat => (
                       <option key={cat._id} value={cat._id}>
                         {cat.name}
                       </option>
@@ -377,3 +377,5 @@ const ProductModal = ({ isOpen, onClose, product = null, categories = [] }) => {
 };
 
 export default ProductModal;
+
+

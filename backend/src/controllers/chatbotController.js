@@ -1,7 +1,8 @@
 const ChatbotConversation = require('../models/ChatbotConversation');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
-const { AppError, asyncHandler } = require('../middleware/errorHandler');
+const AppError = require('../utils/appError');
+const asyncHandler = require('../utils/asyncHandler');
 const {
   generateResponse,
   extractUserPreferences,

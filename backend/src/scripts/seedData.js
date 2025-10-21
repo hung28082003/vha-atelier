@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-require('dotenv').config({ path: './config.env' });
+require('dotenv').config({ path: require('path').join(__dirname, '../../config.env') });
 
 const connectDB = require('../config/database');
 const User = require('../models/User');
@@ -84,14 +84,24 @@ const seedData = async () => {
     const products = await Product.insertMany([
       {
         name: 'Áo sơ mi nam cao cấp',
+        slug: 'ao-so-mi-nam-cao-cap',
         description: 'Áo sơ mi nam chất liệu cotton cao cấp, form dáng chuẩn',
         price: 500000,
         originalPrice: 600000,
         stock: 50,
         category: categories[0]._id,
         brand: 'VHA Atelier',
-        sizes: ['S', 'M', 'L', 'XL'],
-        colors: ['Trắng', 'Xanh', 'Đen'],
+        sizes: [
+          { size: 'S', stock: 10, sku: 'ASM-S' },
+          { size: 'M', stock: 15, sku: 'ASM-M' },
+          { size: 'L', stock: 15, sku: 'ASM-L' },
+          { size: 'XL', stock: 10, sku: 'ASM-XL' }
+        ],
+        colors: [
+          { name: 'Trắng', hex: '#FFFFFF' },
+          { name: 'Xanh', hex: '#0066CC' },
+          { name: 'Đen', hex: '#000000' }
+        ],
         images: [
           {
             url: 'https://res.cloudinary.com/your-cloud/image/upload/v1/products/shirt1.jpg',
@@ -105,14 +115,23 @@ const seedData = async () => {
       },
       {
         name: 'Váy dài nữ sang trọng',
+        slug: 'vay-dai-nu-sang-trong',
         description: 'Váy dài nữ thiết kế sang trọng, phù hợp mọi dịp',
         price: 800000,
         originalPrice: 1000000,
         stock: 30,
         category: categories[1]._id,
         brand: 'VHA Atelier',
-        sizes: ['S', 'M', 'L'],
-        colors: ['Đen', 'Đỏ', 'Xanh'],
+        sizes: [
+          { size: 'S', stock: 10, sku: 'VDN-S' },
+          { size: 'M', stock: 10, sku: 'VDN-M' },
+          { size: 'L', stock: 10, sku: 'VDN-L' }
+        ],
+        colors: [
+          { name: 'Đen', hex: '#000000' },
+          { name: 'Đỏ', hex: '#CC0000' },
+          { name: 'Xanh', hex: '#0066CC' }
+        ],
         images: [
           {
             url: 'https://res.cloudinary.com/your-cloud/image/upload/v1/products/dress1.jpg',
@@ -126,13 +145,22 @@ const seedData = async () => {
       },
       {
         name: 'Quần jean nam',
+        slug: 'quan-jean-nam',
         description: 'Quần jean nam chất liệu denim cao cấp',
         price: 600000,
         stock: 40,
         category: categories[2]._id,
         brand: 'VHA Atelier',
-        sizes: ['28', '30', '32', '34'],
-        colors: ['Xanh', 'Đen'],
+        sizes: [
+          { size: '28', stock: 10, sku: 'QJ-28' },
+          { size: '30', stock: 10, sku: 'QJ-30' },
+          { size: '32', stock: 10, sku: 'QJ-32' },
+          { size: '34', stock: 10, sku: 'QJ-34' }
+        ],
+        colors: [
+          { name: 'Xanh', hex: '#0066CC' },
+          { name: 'Đen', hex: '#000000' }
+        ],
         images: [
           {
             url: 'https://res.cloudinary.com/your-cloud/image/upload/v1/products/jeans1.jpg',
@@ -146,13 +174,20 @@ const seedData = async () => {
       },
       {
         name: 'Túi xách nữ cao cấp',
+        slug: 'tui-xach-nu-cao-cap',
         description: 'Túi xách nữ thiết kế tinh tế, chất liệu da thật',
         price: 1200000,
         stock: 20,
         category: categories[3]._id,
         brand: 'VHA Atelier',
-        sizes: ['One Size'],
-        colors: ['Đen', 'Nâu', 'Đỏ'],
+        sizes: [
+          { size: 'One Size', stock: 20, sku: 'TX-OS' }
+        ],
+        colors: [
+          { name: 'Đen', hex: '#000000' },
+          { name: 'Nâu', hex: '#8B4513' },
+          { name: 'Đỏ', hex: '#CC0000' }
+        ],
         images: [
           {
             url: 'https://res.cloudinary.com/your-cloud/image/upload/v1/products/bag1.jpg',
@@ -182,3 +217,4 @@ const seedData = async () => {
 };
 
 seedData();
+

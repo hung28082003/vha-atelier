@@ -17,3 +17,4 @@ const securityHeaders = (req, res, next) => {
 };
 
 module.exports = securityHeaders;
+

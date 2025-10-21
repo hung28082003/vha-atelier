@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
-const { AppError, asyncHandler } = require('../middleware/errorHandler');
+const AppError = require('../utils/appError');
+const asyncHandler = require('../utils/asyncHandler');
 const { uploadProductImages } = require('../config/cloudinary');
 
 // @desc    Get all products with filtering and pagination

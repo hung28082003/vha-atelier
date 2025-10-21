@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { updateUser } from '../../store/slices/adminSlice';
 import { useDispatch } from 'react-redux';
+import toast from 'react-hot-toast';
 
 const UserModal = ({ isOpen, onClose, user = null }) => {
   const dispatch = useDispatch();
@@ -39,10 +40,13 @@ const UserModal = ({ isOpen, onClose, user = null }) => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      await dispatch(updateUser({ userId: user._id, userData: data })).unwrap();
+      if (user) {
+        await dispatch(updateUser({ userId: user._id, userData: data })).unwrap();
+        toast.success('Cập nhật người dùng thành công!');
+      }
       onClose();
     } catch (error) {
-      console.error('Error updating user:', error);
+      toast.error('Lỗi khi cập nhật người dùng');
     } finally {
       setIsLoading(false);
     }
@@ -51,28 +55,29 @@ const UserModal = ({ isOpen, onClose, user = null }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Chỉnh sửa người dùng
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {user ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Họ và tên *
               </label>
               <input
                 {...register('name', { required: 'Họ và tên là bắt buộc' })}
+                type="text"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Nhập họ và tên"
               />
@@ -119,14 +124,14 @@ const UserModal = ({ isOpen, onClose, user = null }) => {
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center">
                 <input
                   {...register('isActive')}
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label className="ml-2 block text-sm text-gray-700">
+                <label className="ml-2 text-sm text-gray-700">
                   Tài khoản hoạt động
                 </label>
               </div>
@@ -137,28 +142,27 @@ const UserModal = ({ isOpen, onClose, user = null }) => {
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label className="ml-2 block text-sm text-gray-700">
+                <label className="ml-2 text-sm text-gray-700">
                   Email đã xác thực
                 </label>
               </div>
             </div>
           </div>
 
-          {/* Form Actions */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              {isLoading ? 'Đang cập nhật...' : 'Cập nhật'}
+              {isLoading ? 'Đang xử lý...' : (user ? 'Cập nhật' : 'Tạo mới')}
             </button>
           </div>
         </form>

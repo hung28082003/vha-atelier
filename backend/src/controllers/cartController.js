@@ -1,6 +1,7 @@
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
-const { AppError, asyncHandler } = require('../middleware/errorHandler');
+const AppError = require('../utils/appError');
+const asyncHandler = require('../utils/asyncHandler');
 
 // @desc    Get user's cart
 // @route   GET /api/cart

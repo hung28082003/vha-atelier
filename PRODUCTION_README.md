@@ -3,12 +3,14 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - MongoDB Atlas account
 - Cloudinary account
 - Gmail App Password
 
 ### 1. Environment Setup
+
 ```bash
 # Clone repository
 git clone <repository-url>
@@ -21,7 +23,9 @@ cd backend && npm install && cd ..
 ```
 
 ### 2. Environment Variables
+
 Create `backend/config.env`:
+
 ```env
 NODE_ENV=production
 PORT=5000
@@ -52,6 +56,7 @@ FRONTEND_URL=https://your-domain.com
 ```
 
 ### 3. Database Setup
+
 ```bash
 # Seed initial data
 cd backend
@@ -59,6 +64,7 @@ node src/scripts/seedData.js
 ```
 
 ### 4. Start Application
+
 ```bash
 # Development
 npm run dev
@@ -70,6 +76,7 @@ npm start
 ## 🔧 Admin Access
 
 **Default Admin Credentials:**
+
 - Email: `admin@vha-atelier.com`
 - Password: `admin123456`
 
@@ -78,6 +85,7 @@ npm start
 ## 📊 Features
 
 ### Frontend (React.js)
+
 - ✅ Responsive Design
 - ✅ User Authentication
 - ✅ Product Catalog
@@ -89,6 +97,7 @@ npm start
 - ✅ Order Management
 
 ### Backend (Node.js)
+
 - ✅ RESTful API
 - ✅ JWT Authentication
 - ✅ ✅ MongoDB Integration
@@ -102,22 +111,26 @@ npm start
 ## 🌐 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `GET /api/auth/profile` - Get user profile
 
 ### Products
+
 - `GET /api/products` - List products
 - `GET /api/products/:id` - Product details
 - `GET /api/products/featured` - Featured products
 
 ### Admin
+
 - `GET /api/admin/dashboard/stats` - Dashboard statistics
 - `GET /api/admin/users` - User management
 - `GET /api/admin/products` - Product management
 - `GET /api/admin/orders` - Order management
 
 ### Documentation
+
 - `GET /api/docs` - API documentation
 
 ## 🛡️ Security Features
@@ -134,6 +147,7 @@ npm start
 ## 📱 Mobile Responsive
 
 The application is fully responsive and works on:
+
 - Desktop (1200px+)
 - Tablet (768px - 1199px)
 - Mobile (320px - 767px)
@@ -141,6 +155,7 @@ The application is fully responsive and works on:
 ## 🚀 Deployment Options
 
 ### Option 1: Vercel (Frontend) + Railway (Backend)
+
 ```bash
 # Frontend to Vercel
 cd frontend
@@ -153,6 +168,7 @@ railway deploy
 ```
 
 ### Option 2: Netlify (Frontend) + Heroku (Backend)
+
 ```bash
 # Frontend to Netlify
 cd frontend
@@ -166,6 +182,7 @@ git push heroku main
 ```
 
 ### Option 3: Docker Deployment
+
 ```bash
 # Build and run with Docker
 docker-compose up -d
@@ -190,6 +207,7 @@ docker-compose up -d
 ## 📞 Support
 
 For technical support:
+
 - Email: support@vha-atelier.com
 - Documentation: `/api/docs`
 - GitHub Issues: [Repository Issues]
@@ -201,3 +219,4 @@ This project is licensed under the MIT License.
 ---
 
 **VHA Atelier** - Thời trang cao cấp cho mọi người 🎨
+

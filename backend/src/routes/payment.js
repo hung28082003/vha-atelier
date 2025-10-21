@@ -17,7 +17,8 @@ const {
   validateObjectId
 } = require('../middleware/validation');
 const Order = require('../models/Order');
-const { AppError, asyncHandler } = require('../middleware/errorHandler');
+const AppError = require('../utils/appError');
+const asyncHandler = require('../utils/asyncHandler');
 
 // @desc    Generate payment QR code for order
 // @route   POST /api/payment/:orderId/qr

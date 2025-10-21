@@ -23,17 +23,15 @@ import {
   getProducts,
   getOrders,
   getSystemSettings,
-  updateUser,
   deleteUser,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  updateOrderStatus
+  deleteProduct
 } from '../store/slices/adminSlice';
 import ProductModal from '../components/admin/ProductModal';
 import UserModal from '../components/admin/UserModal';
 import OrderModal from '../components/admin/OrderModal';
+import SystemSettingsModal from '../components/admin/SystemSettingsModal';
 import toast from 'react-hot-toast';
+import categoriesAPI from '../services/categoriesAPI';
 
 const AdminDashboard = () => {
   const { user } = useSelector((state) => state.auth);
@@ -53,6 +51,7 @@ const AdminDashboard = () => {
   const [productModal, setProductModal] = useState({ isOpen: false, product: null });
   const [userModal, setUserModal] = useState({ isOpen: false, user: null });
   const [orderModal, setOrderModal] = useState({ isOpen: false, order: null });
+  const [systemSettingsModal, setSystemSettingsModal] = useState(false);
   const [categories, setCategories] = useState([]);
 
   // Redirect if not admin
@@ -68,6 +67,13 @@ const AdminDashboard = () => {
     if (user && user.role === 'admin') {
       dispatch(getDashboardStats());
       dispatch(getSystemSettings());
+      // Load categories for product modal
+      categoriesAPI.fetchCategories({ page: 1, limit: 100 })
+        .then(res => {
+          const categoriesData = res.data.data?.categories || res.data.categories || res.data.data || [];
+          setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        })
+        .catch(() => setCategories([]));
     }
   }, [dispatch, user]);
 
@@ -210,7 +216,22 @@ const AdminDashboard = () => {
       case 'chatbot':
         return <ChatbotTab />;
       case 'settings':
-        return <SettingsTab systemSettings={systemSettings} loading={loading.settings} />;
+        return (
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Cài đặt hệ thống</h2>
+              <button
+                onClick={() => setSystemSettingsModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Chỉnh sửa cài đặt
+              </button>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <p className="text-gray-600">Nhấn "Chỉnh sửa cài đặt" để cấu hình hệ thống.</p>
+            </div>
+          </div>
+        );
       default:
         return <DashboardTab dashboardStats={dashboardStats} loading={loading.dashboard} />;
     }
@@ -317,6 +338,11 @@ const AdminDashboard = () => {
         isOpen={orderModal.isOpen}
         onClose={() => setOrderModal({ isOpen: false, order: null })}
         order={orderModal.order}
+      />
+
+      <SystemSettingsModal
+        isOpen={systemSettingsModal}
+        onClose={() => setSystemSettingsModal(false)}
       />
     </div>
   );
